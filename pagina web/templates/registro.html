@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <title>Registro</title>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <h1>Mi Empresa</h1>
+    </header>
+
+    <div class="layout">
+
+        <!-- ASIDE -->
+        <aside>
+            <h2>Crear Cuenta</h2>
+            <p>Regístrate completando el siguiente formulario.</p>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main>
+            <section class="register-box">
+
+                <h2>Regístrate</h2>
+
+                <!-- BANNER -->
+                <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Banner" class="banner-registro">
+
+                <form action="/registro" method="POST"><!-- LLEVAR ESTOS DATOS A LA BBDD -->
+
+                    <input type="text" name="usuario" placeholder="Usuario" required>
+
+                    <input type="email" name="correo" placeholder="Correo" required> <!-- HACER QUE CONTENGA UN @ -->
+
+                    <input type="password" name="clave" placeholder="Contraseña" required>
+
+                    <input type="text" name="nombre" placeholder="Nombre"
+                        required
+                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                        title="Solo se permiten letras y espacios">
+
+                    <input type="text" name="apellido" placeholder="Apellido"
+                        required
+                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                        title="Solo se permiten letras y espacios">
+
+                    <input type="tel" name="telefono" placeholder="Teléfono"  
+                        required
+                        pattern="[0-9]+"
+                        title="Solo se permiten números">
+                        <!-- PONER UNA LISTA DE NUMEROS DE PAISES MAS REPRESENTATIVOS PARA RELLENAR -->
+
+                    <input type="text" name="direccion" placeholder="Dirección" required>
+
+                    <button type="submit" class="boton-registro">Registrarse</button>
+
+                </form>
+
+            </section>
+        </main>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>© 2026 - Todos los derechos reservados</p>
+    </footer>
+
+</body>
+</html>

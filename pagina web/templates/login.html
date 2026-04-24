@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <title>Login</title>
+</head>
+
+<body>
+
+<header>
+    <h1>Mi Empresa</h1>
+</header>
+
+<div class="layout">
+
+    <aside>
+        <h2>Bienvenido</h2>
+        <p>Accede con tu usuario o crea una nueva cuenta.</p>
+        <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-empresa">
+    </aside>
+
+    <main>
+        <section class="login-box">
+
+            <h2>Iniciar Sesión</h2>
+
+            <form action="/login" method="POST">
+
+                <input type="text" name="usuario" placeholder="Usuario" required>
+
+                <input type="password" name="clave" placeholder="Contraseña" required>
+
+                <a href="/recuperar" class="forgot-pass">
+                    ¿Has olvidado la contraseña?
+                </a>
+
+                <button type="submit" class="btn-login">Iniciar Sesión</button>
+
+            </form>
+
+            <h3>¿No tienes una cuenta?</h3>
+            <a href="/registro" class="btn-registro">Registrarse</a>
+
+        </section>
+    </main>
+
+</div>
+
+<footer>
+    <p>© 2026 - Todos los derechos reservados</p>
+</footer>
+
+</body>
+</html>

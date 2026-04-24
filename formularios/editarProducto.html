@@ -1,0 +1,12 @@
+<form method="POST" action="/productos/editar">
+    <input type="text" name="nombre">
+    <textarea name="descripcion"></textarea>
+    <select name="categoria_id"></select>
+    <select name="estado">
+        <option value="activo">Activo</option>
+        <option value="reservado">Reservado</option>
+        <option value="recogido">Recogido</option>
+        <option value="cancelado">Cancelado</option>
+    </select>
+    <button type="submit">Guardar</button>
+</form>

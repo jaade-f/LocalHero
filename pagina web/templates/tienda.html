@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tienda.nombre }}{% endblock %}
+
+{% block content %}
+
+<section class="tienda-detalle">
+
+    <!-- IMAGEN PORTADA -->
+    <img src="{{ url_for('static', filename='img/logo.png') }}" class="tienda-portada" alt="{{ tienda.nombre }}">
+
+    <!-- INFO PRINCIPAL -->
+    <div class="tienda-info">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" class="tienda-logo" alt="Logo tienda">
+        <div class="tienda-info-texto">
+            <h1>{{ tienda.nombre }}</h1>
+            <p>📍 {{ tienda.direccion }}</p>
+            <p>🕐 Abierto · Cierra a las 21:00</p>
+            <span class="tienda-badge">{{ tienda.distancia }} km</span>
+        </div>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="productos-seccion">
+        <h2>Productos disponibles</h2>
+        <div class="productos-grid">
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Manzanas ecológicas</h4>
+                    <p>1 kg · Origen local</p>
+                    <span class="producto-precio">2,50 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Pan de masa madre</h4>
+                    <p>500 g · Artesano</p>
+                    <span class="producto-precio">3,20 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Leche fresca</h4>
+                    <p>1 L · Sin pasteurizar</p>
+                    <span class="producto-precio">1,80 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Tomates cherry</h4>
+                    <p>250 g · De temporada</p>
+                    <span class="producto-precio">1,90 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Queso curado</h4>
+                    <p>200 g · Artesano</p>
+                    <span class="producto-precio">4,50 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+            <div class="producto-card">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
+                <div class="producto-card-body">
+                    <h4>Aceite de oliva</h4>
+                    <p>500 ml · Virgen extra</p>
+                    <span class="producto-precio">6,00 €</span>
+                    <button class="btn-agregar">Añadir al pedido</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}

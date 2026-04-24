@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Tiendas{% endblock %}
+
+{% block content %}
+
+<section class="tiendas-page">
+
+    <h1>Todas las tiendas</h1>
+    <p>Encuentra la tienda que buscas cerca de ti.</p>
+
+    <div class="tiendas-search">
+        <input type="text" placeholder="Buscar tienda por nombre o dirección...">
+    </div>
+
+    <div class="tiendas-grid">
+
+        <a href="/tienda/1" class="tienda-card tienda1">
+            <div class="overlay">
+                <h3>Tienda Verde</h3>
+                <p>Calle Mayor 12</p>
+                <span>1.2 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/2" class="tienda-card tienda2">
+            <div class="overlay">
+                <h3>Eco Market</h3>
+                <p>Avenida Sol 45</p>
+                <span>2.5 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/3" class="tienda-card tienda3">
+            <div class="overlay">
+                <h3>Fresh Store</h3>
+                <p>Calle Luna 8</p>
+                <span>0.9 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/4" class="tienda-card tienda4">
+            <div class="overlay">
+                <h3>Bio Shop</h3>
+                <p>Gran Vía 21</p>
+                <span>3.1 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/5" class="tienda-card tienda5">
+            <div class="overlay">
+                <h3>Natural Market</h3>
+                <p>Calle Norte 3</p>
+                <span>1.8 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/6" class="tienda-card tienda6">
+            <div class="overlay">
+                <h3>Green Shop</h3>
+                <p>Calle Sur 99</p>
+                <span>2.2 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/7" class="tienda-card tienda7">
+            <div class="overlay">
+                <h3>Organic Plus</h3>
+                <p>Paseo del Río 5</p>
+                <span>4.0 km</span>
+            </div>
+        </a>
+
+        <a href="/tienda/8" class="tienda-card tienda8">
+            <div class="overlay">
+                <h3>La Despensa</h3>
+                <p>Calle Olmos 17</p>
+                <span>2.9 km</span>
+            </div>
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

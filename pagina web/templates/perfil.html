@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block content %}
+
+<div class="perfil-container">
+
+    <!-- CABECERA PERFIL -->
+    <div class="perfil-header">
+
+        <img src="{{ url_for('static', filename='img/default-user.png') }}" class="perfil-foto">
+
+        <div class="perfil-info">
+            <h2>{{ usuario.nombre }}</h2>
+            <p>{{ usuario.email }}</p>
+        </div>
+
+    </div>
+
+    <!-- DATOS PERSONALES -->
+    <div class="perfil-datos">
+
+        <div class="dato">
+            <label>Dirección</label>
+            <p>{{ usuario.direccion }}</p>
+        </div>
+
+        <div class="dato">
+            <label>Código Postal</label>
+            <p>{{ usuario.codigo_postal }}</p>
+        </div>
+
+    </div>
+
+    <!-- BOTÓN EDITAR -->
+    <div class="perfil-acciones">
+        <a href="{{ url_for('editar_perfil') }}" class="btn">Editar perfil</a>
+    </div>
+
+    <!-- PESTAÑAS -->
+    <div class="perfil-tabs">
+
+        <a href="{{ url_for('perfil') }}" class="tab active">Datos</a>
+        <a href="{{ url_for('pedidos') }}" class="tab">Mis pedidos</a>
+
+    </div>
+
+    <!-- CONTENIDO DE LA PESTAÑA -->
+    <div class="perfil-contenido">
+
+        <p>Aquí puedes ver y gestionar tu información personal.</p>
+
+    </div>
+
+</div>
+
+{% endblock %}

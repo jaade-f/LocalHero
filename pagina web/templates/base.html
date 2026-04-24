@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="main-header">
+
+    <!-- IZQUIERDA: UBICACIÓN -->
+    <div class="header-left">
+        <input type="text" placeholder="Tu ubicación..." id="ubicacion">
+    </div>
+
+    <!-- CENTRO: LOGO -->
+    <div class="header-center">
+        <a href="/principal">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-header">
+        </a>
+    </div>
+
+    <!-- DERECHA: PERFIL -->
+    <div class="header-right">
+        <a href="/perfil">
+            <img src="{{ url_for('static', filename='img/pordefecto.png') }}" class="icono-perfil">
+        </a>
+    </div>
+
+</header>
+
+<!-- ================= CONTENIDO ================= -->
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="main-footer">
+
+    <div class="footer-section">
+        <h4>Mi Empresa</h4>
+        <p>Tu tienda online de confianza.</p>
+    </div>
+
+    <div class="footer-section">
+        <h4>Ayuda</h4>
+        <a href="/contacto"><p>Contacto</p></a>
+        <a href="/preguntas-frecuentes"><p>Preguntas frecuentes</p></a>
+        <a href="/envios"><p>Envíos</p></a>
+    </div>
+
+    <div class="footer-section">
+        <h4>Legal</h4>
+        <a href="/politica-privacidad"><p>Política de privacidad</p></a>
+        <a href="/terminos-condiciones"><p>Términos y condiciones</p></a>
+    </div>
+
+</footer>
+
+</body>
+</html>

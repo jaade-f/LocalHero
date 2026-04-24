@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Contacto{% endblock %}
+
+{% block content %}
+
+<section class="pagina-info-container">
+
+    <div class="pagina-info-header">
+        <h1>Contacto</h1>
+        <p>Estamos aquí para ayudarte. Escríbenos y te responderemos lo antes posible.</p>
+    </div>
+
+    <div class="contacto-grid">
+
+        <!-- FORMULARIO -->
+        <div class="contacto-form-card">
+            <h2>Envíanos un mensaje</h2>
+            <form class="contacto-form" action="#" method="POST">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="asunto">Asunto</label>
+                    <input type="text" id="asunto" name="asunto" placeholder="¿En qué podemos ayudarte?" required>
+                </div>
+                <div class="form-group">
+                    <label for="mensaje">Mensaje</label>
+                    <textarea id="mensaje" name="mensaje" rows="5" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                </div>
+                <button type="submit" class="btn-enviar">Enviar mensaje</button>
+            </form>
+        </div>
+
+        <!-- INFO DE CONTACTO -->
+        <div class="contacto-info">
+            <div class="contacto-item">
+                <div class="contacto-icono">📧</div>
+                <div>
+                    <h4>Email</h4>
+                    <p>soporte@miempresa.com</p>
+                </div>
+            </div>
+            <div class="contacto-item">
+                <div class="contacto-icono">📞</div>
+                <div>
+                    <h4>Teléfono</h4>
+                    <p>+34 900 123 456</p>
+                    <small>Lun–Vie, 9:00–18:00</small>
+                </div>
+            </div>
+            <div class="contacto-item">
+                <div class="contacto-icono">📍</div>
+                <div>
+                    <h4>Dirección</h4>
+                    <p>Calle Mayor 12, 28001 Madrid</p>
+                </div>
+            </div>
+            <div class="contacto-item">
+                <div class="contacto-icono">🕐</div>
+                <div>
+                    <h4>Horario de atención</h4>
+                    <p>Lunes a Viernes: 9:00 – 18:00</p>
+                    <p>Sábados: 10:00 – 14:00</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

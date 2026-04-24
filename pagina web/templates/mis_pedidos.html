@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Mis pedidos{% endblock %}
+
+{% block content %}
+
+<section class="pedidos-container">
+
+    <h1>Mis pedidos</h1>
+    <p>Aquí puedes ver todos los pedidos que has realizado.</p>
+
+    <div class="pedidos-lista">
+
+        <!-- PEDIDO 1 -->
+        <div class="pedido-card">
+            <div class="pedido-info">
+                <h3>Pedido #001</h3>
+                <p>Tienda: Eco Market</p>
+                <p>Fecha: 10/04/2026</p>
+            </div>
+
+            <div class="pedido-detalles">
+                <p>Total: 24.99€</p>
+                <span class="estado entregado">Entregado</span>
+            </div>
+        </div>
+
+        <!-- PEDIDO 2 -->
+        <div class="pedido-card">
+            <div class="pedido-info">
+                <h3>Pedido #002</h3>
+                <p>Tienda: Green Shop</p>
+                <p>Fecha: 08/04/2026</p>
+            </div>
+
+            <div class="pedido-detalles">
+                <p>Total: 15.50€</p>
+                <span class="estado pendiente">Pendiente</span>
+            </div>
+        </div>
+
+        <!-- PEDIDO 3 -->
+        <div class="pedido-card">
+            <div class="pedido-info">
+                <h3>Pedido #003</h3>
+                <p>Tienda: Fresh Store</p>
+                <p>Fecha: 02/04/2026</p>
+            </div>
+
+            <div class="pedido-detalles">
+                <p>Total: 42.00€</p>
+                <span class="estado cancelado">Cancelado</span>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

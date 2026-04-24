@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Preguntas Frecuentes{% endblock %}
+
+{% block content %}
+
+<section class="pagina-info-container">
+
+    <div class="pagina-info-header">
+        <h1>Preguntas Frecuentes</h1>
+        <p>Encuentra respuestas a las dudas más comunes de nuestros usuarios.</p>
+    </div>
+
+    <div class="faq-lista">
+
+        <div class="faq-categoria">
+            <h2 class="faq-categoria-titulo">🛒 Pedidos</h2>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Cómo hago un pedido?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Para hacer un pedido, elige una tienda cercana desde la página principal, selecciona los productos que deseas y añádelos al carrito. Cuando estés listo, pulsa "Finalizar compra" y sigue los pasos.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Puedo cancelar o modificar mi pedido?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Puedes cancelar o modificar tu pedido dentro de los 10 minutos siguientes a realizarlo. Pasado ese tiempo, el pedido ya está en preparación y no es posible modificarlo. Contáctanos si tienes algún problema.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Dónde puedo ver el estado de mi pedido?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Puedes consultar el estado de tus pedidos en la sección <a href="/pedidos" class="faq-link">Mis Pedidos</a> de tu cuenta. Allí verás el historial y el estado actual de cada pedido.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-categoria">
+            <h2 class="faq-categoria-titulo">🚚 Envíos</h2>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Cuánto tarda en llegar mi pedido?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>El tiempo de entrega depende de la distancia y la disponibilidad de la tienda. Normalmente los pedidos locales se entregan en un plazo de 30 a 90 minutos. Puedes ver el tiempo estimado al confirmar tu pedido.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Tienen envío gratuito?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Sí. Los pedidos superiores a 30 € tienen envío gratuito. Para pedidos menores, el coste de envío se calcula según la distancia y se muestra antes de confirmar la compra.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-categoria">
+            <h2 class="faq-categoria-titulo">💳 Pagos</h2>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Qué métodos de pago aceptan?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Aceptamos tarjetas de crédito y débito (Visa, Mastercard), PayPal y pago en efectivo a la entrega. Todos los pagos online están cifrados y son seguros.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Cómo solicito un reembolso?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Si tienes un problema con tu pedido, contáctanos a través de la sección <a href="/contacto" class="faq-link">Contacto</a> indicando tu número de pedido. Gestionaremos el reembolso en un plazo máximo de 5 días hábiles.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-categoria">
+            <h2 class="faq-categoria-titulo">👤 Cuenta</h2>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Cómo cambio mi contraseña?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Ve a tu <a href="/perfil" class="faq-link">Perfil</a>, pulsa en "Editar perfil" y selecciona la opción de cambiar contraseña. Necesitarás tu contraseña actual para confirmarlo.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-pregunta" onclick="toggleFaq(this)">
+                    ¿Cómo elimino mi cuenta?
+                    <span class="faq-icono">+</span>
+                </button>
+                <div class="faq-respuesta">
+                    <p>Para eliminar tu cuenta, escríbenos a través de <a href="/contacto" class="faq-link">Contacto</a> con el asunto "Eliminar cuenta". Lo procesaremos en un plazo de 48 horas.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="faq-footer-cta">
+        <p>¿No encontraste lo que buscabas?</p>
+        <a href="/contacto" class="btn-enviar">Contáctanos</a>
+    </div>
+
+</section>
+
+<script>
+function toggleFaq(btn) {
+    const item = btn.parentElement;
+    const respuesta = item.querySelector('.faq-respuesta');
+    const icono = btn.querySelector('.faq-icono');
+    const abierto = item.classList.contains('abierto');
+
+    // cerrar todos
+    document.querySelectorAll('.faq-item.abierto').forEach(el => {
+        el.classList.remove('abierto');
+        el.querySelector('.faq-respuesta').style.maxHeight = null;
+        el.querySelector('.faq-icono').textContent = '+';
+    });
+
+    if (!abierto) {
+        item.classList.add('abierto');
+        respuesta.style.maxHeight = respuesta.scrollHeight + 'px';
+        icono.textContent = '−';
+    }
+}
+</script>
+
+{% endblock %}

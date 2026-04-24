@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Envíos{% endblock %}
+
+{% block content %}
+
+<section class="pagina-info-container">
+
+    <div class="pagina-info-header">
+        <h1>Información de Envíos</h1>
+        <p>Todo lo que necesitas saber sobre cómo y cuándo recibirás tu pedido.</p>
+    </div>
+
+    <!-- TARJETAS RESUMEN -->
+    <div class="envios-cards">
+        <div class="envio-card">
+            <div class="envio-card-icono">⚡</div>
+            <h3>Entrega exprés</h3>
+            <p>En menos de 90 minutos desde tiendas cercanas a tu ubicación.</p>
+        </div>
+        <div class="envio-card">
+            <div class="envio-card-icono">🆓</div>
+            <h3>Envío gratis</h3>
+            <p>En pedidos superiores a 30 €. Sin costes ocultos.</p>
+        </div>
+        <div class="envio-card">
+            <div class="envio-card-icono">📍</div>
+            <h3>Seguimiento en tiempo real</h3>
+            <p>Consulta el estado de tu entrega en cualquier momento desde tu cuenta.</p>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DETALLADO -->
+    <div class="info-bloque">
+        <h2>Zonas de entrega</h2>
+        <p>Actualmente realizamos entregas en las principales ciudades de España. La disponibilidad depende de las tiendas activas en tu zona. Al introducir tu dirección, verás automáticamente las tiendas que pueden entregarte.</p>
+    </div>
+
+    <div class="info-bloque">
+        <h2>Plazos de entrega</h2>
+        <div class="envios-tabla">
+            <div class="tabla-fila tabla-cabecera">
+                <span>Tipo de envío</span>
+                <span>Tiempo estimado</span>
+                <span>Precio</span>
+            </div>
+            <div class="tabla-fila">
+                <span>Entrega local exprés</span>
+                <span>30 – 90 min</span>
+                <span>Gratis desde 30 €</span>
+            </div>
+            <div class="tabla-fila">
+                <span>Entrega local estándar</span>
+                <span>2 – 4 horas</span>
+                <span>1,99 €</span>
+            </div>
+            <div class="tabla-fila">
+                <span>Pedido pequeño (– 30 €)</span>
+                <span>30 – 90 min</span>
+                <span>2,99 €</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-bloque">
+        <h2>Seguimiento del pedido</h2>
+        <p>Una vez confirmado tu pedido, recibirás una notificación con el estado de la preparación y la entrega. Puedes consultar el estado detallado en la sección <a href="/pedidos" class="faq-link">Mis Pedidos</a>.</p>
+    </div>
+
+    <div class="info-bloque">
+        <h2>Incidencias en la entrega</h2>
+        <p>Si tu pedido llega dañado, incompleto o no ha llegado en el plazo indicado, contáctanos desde <a href="/contacto" class="faq-link">Contacto</a> y lo resolveremos en un máximo de 24 horas.</p>
+    </div>
+
+    <div class="info-bloque">
+        <h2>Preguntas sobre envíos</h2>
+        <p>Si tienes más dudas, consulta nuestra sección de <a href="/preguntas-frecuentes" class="faq-link">Preguntas Frecuentes</a> o escríbenos directamente.</p>
+    </div>
+
+</section>
+
+{% endblock %}
