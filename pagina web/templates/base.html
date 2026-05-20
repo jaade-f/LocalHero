@@ -3,48 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>
 
-<!-- ================= HEADER ================= -->
-<header class="main-header">
+{# -------------------------------------------------------------------------
+   Detect auth pages (login / register) to show a minimal header.
+   On auth pages we hide the cart, profile icon and navigation links
+   so unauthenticated users cannot navigate to protected routes.
+   ------------------------------------------------------------------------- #}
+{% set auth_pages = ['/', '/registro', '/registro-propietario'] %}
+{% set is_auth_page = request.path in auth_pages %}
 
-    <!-- IZQUIERDA: UBICACIÓN -->
-    <div class="header-left">
-        <input type="text" placeholder="Tu ubicación..." id="ubicacion">
-    </div>
+{% if not is_auth_page %}
 
-    <!-- CENTRO: LOGO -->
-    <div class="header-center">
-        <a href="/principal">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-header">
-        </a>
-    </div>
+    {# =====================================================================
+       FULL HEADER — shown only when the user has an active session
+       ===================================================================== #}
+    <header class="main-header">
 
-    <!-- DERECHA: PERFIL -->
-    <div class="header-right">
-        <a href="/perfil">
-            <img src="{{ url_for('static', filename='img/pordefecto.png') }}" class="icono-perfil">
-        </a>
-    </div>
+        <div class="header-left">
+            <input type="text" placeholder="Tu ubicación..." id="ubicacion">
+        </div>
 
-</header>
+        <div class="header-center">
+            <a href="/principal">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-header">
+            </a>
+        </div>
 
-<!-- ================= CONTENIDO ================= -->
+        <div class="header-right">
+
+            {% if session.get('rol') == 'propietario' %}
+                {# Owners get a panel shortcut instead of the shopping cart #}
+                <a href="/propietario/panel" class="icono-panel-prop" title="Owner panel">
+                    🏪
+                </a>
+            {% else %}
+                {# Regular users get the shopping cart button #}
+                <button class="icono-carrito-btn" onclick="abrirCarrito()">
+                    🛒
+                    <span class="carrito-badge" id="carritoBadge" style="display:none">0</span>
+                </button>
+            {% endif %}
+
+            <a href="/perfil">
+                <img src="{{ url_for('static', filename='img/pordefecto.png') }}" class="icono-perfil">
+            </a>
+
+        </div>
+
+    </header>
+
+    {% if session.get('rol') != 'propietario' %}
+
+        {# =================================================================
+           SHOPPING CART PANEL — slide-in sidebar, users only
+           ================================================================= #}
+        <div id="carritoOverlay" class="carrito-overlay" onclick="cerrarCarrito()"></div>
+
+        <aside id="carritoPanel" class="carrito-panel">
+
+            <div class="carrito-header">
+                <h2>🛒 Mi carrito</h2>
+                <button class="carrito-cerrar" onclick="cerrarCarrito()">✕</button>
+            </div>
+
+            <div id="carritoContenido" class="carrito-contenido">
+                <p class="carrito-vacio">Tu carrito está vacío.</p>
+            </div>
+
+            <div class="carrito-footer">
+                <div class="carrito-total">
+                    Total salvado: <strong id="carritoTotal">0 kg</strong>
+                </div>
+                <button class="boton-confirmar-pedido" onclick="confirmarPedido()">
+                    Confirmar pedido
+                </button>
+            </div>
+
+        </aside>
+
+    {% endif %}
+
+{% else %}
+
+    {# =====================================================================
+       MINIMAL HEADER — shown on login and register pages
+       Only the logo is displayed; no navigation or cart links.
+       ===================================================================== #}
+    <header class="main-header main-header--auth">
+        <div class="header-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}"
+                 class="logo-header"
+                 style="cursor:default;">
+        </div>
+    </header>
+
+{% endif %}
+
+
+{# =========================================================================
+   GLOBAL JAVASCRIPT
+   Cart logic runs only for regular users (not owners and not auth pages).
+   mostrarToast() is available globally on every page.
+   ========================================================================= #}
+<script>
+
+// Role injected by Flask as a plain string — no Jinja blocks inside JS
+const USER_ROL = "{{ session.get('rol') or '' }}";
+
+// Cart — global so confirmarPedido() can always access it
+let carrito = JSON.parse(sessionStorage.getItem('carrito') || '[]');
+
+if (USER_ROL !== 'propietario') {
+
+// -------------------------------------------------------------------------
+// CART — persisted in sessionStorage for the current browser tab
+// -------------------------------------------------------------------------
+
+/** Persist cart to sessionStorage and refresh the header badge. */
+function guardarCarrito() {
+    sessionStorage.setItem('carrito', JSON.stringify(carrito));
+    actualizarBadge();
+}
+
+/** Update the item-count badge on the cart button. */
+function actualizarBadge() {
+    const badge = document.getElementById('carritoBadge');
+    if (!badge) return;
+    const total = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'flex' : 'none';
+}
+
+/**
+ * Add a product to the cart.
+ * If the product already exists, increments its quantity.
+ * @param {Object} producto - Product object with at least id_producto and nombre.
+ */
+function agregarAlCarrito(producto) {
+    const existing = carrito.find(i => i.id_producto === producto.id_producto);
+    existing
+        ? existing.cantidad++
+        : carrito.push({ ...producto, cantidad: 1 });
+    guardarCarrito();
+    renderCarrito();
+    abrirCarrito();
+    mostrarToast(`"${producto.nombre}" added to cart`);
+}
+
+/**
+ * Remove a product from the cart by its ID.
+ * @param {number} id - Product ID.
+ */
+function quitarDelCarrito(id) {
+    carrito = carrito.filter(i => i.id_producto !== id);
+    guardarCarrito();
+    renderCarrito();
+}
+
+/**
+ * Change the quantity of a cart item by a delta value.
+ * Removes the item if the resulting quantity is ≤ 0.
+ * @param {number} id    - Product ID.
+ * @param {number} delta - +1 or -1.
+ */
+function cambiarCantidad(id, delta) {
+    const item = carrito.find(i => i.id_producto === id);
+    if (!item) return;
+    item.cantidad += delta;
+    item.cantidad <= 0
+        ? quitarDelCarrito(id)
+        : (guardarCarrito(), renderCarrito());
+}
+
+/** Re-render the cart panel content from the current carrito array. */
+function renderCarrito() {
+    const container = document.getElementById('carritoContenido');
+    const totalEl   = document.getElementById('carritoTotal');
+    if (!container) return;
+
+    if (!carrito.length) {
+        container.innerHTML = '<p class="carrito-vacio">Tu carrito está vacío.</p>';
+        totalEl.textContent = '0 kg';
+        return;
+    }
+
+    let totalKg = 0;
+    container.innerHTML = carrito.map(item => {
+        const kg = parseFloat(item.peso_kg) || 0;
+        totalKg += kg * item.cantidad;
+        return `
+            <div class="carrito-item">
+                <img src="/static/img/${item.imagen_producto || 'pordefecto.png'}"
+                     class="carrito-item-img">
+                <div class="carrito-item-info">
+                    <p class="carrito-item-nombre">${item.nombre}</p>
+                    <p class="carrito-item-info-extra">🌱 ${kg} kg saved</p>
+                    <div class="carrito-item-cantidad">
+                        <button onclick="cambiarCantidad(${item.id_producto}, -1)">−</button>
+                        <span>${item.cantidad}</span>
+                        <button onclick="cambiarCantidad(${item.id_producto}, 1)">+</button>
+                    </div>
+                </div>
+                <button class="carrito-item-borrar"
+                        onclick="quitarDelCarrito(${item.id_producto})">✕</button>
+            </div>
+        `;
+    }).join('');
+
+    totalEl.textContent = totalKg.toFixed(2) + ' kg';
+}
+
+/** Open the cart slide-in panel. */
+function abrirCarrito() {
+    renderCarrito();
+    document.getElementById('carritoPanel').classList.add('abierto');
+    document.getElementById('carritoOverlay').classList.add('activo');
+    document.body.style.overflow = 'hidden';
+}
+
+/** Close the cart slide-in panel. */
+function cerrarCarrito() {
+    document.getElementById('carritoPanel').classList.remove('abierto');
+    document.getElementById('carritoOverlay').classList.remove('activo');
+    document.body.style.overflow = '';
+}
+
+// Initialise badge on page load
+actualizarBadge();
+
+} // end if (USER_ROL !== 'propietario' && !IS_AUTH_PAGE)
+
+
+/**
+ * Send the current cart to the backend to create the orders.
+ * Clears the cart and redirects to /pedidos on success.
+ */
+async function confirmarPedido() {
+    if (typeof carrito === 'undefined' || !carrito.length) return mostrarToast('El carrito está vacío', 'error');
+
+    const btn = document.querySelector('.boton-confirmar-pedido');
+    btn.disabled    = true;
+    btn.textContent = 'Confirmando...';
+
+    try {
+        const res  = await fetch('/carrito/confirmar', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ productos: carrito })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            carrito = [];
+            guardarCarrito();
+            renderCarrito();
+            cerrarCarrito();
+            mostrarToast('¡Pedido confirmado! 🎉');
+            setTimeout(() => { window.location.href = '/pedidos'; }, 1200);
+        } else {
+            mostrarToast(data.mensaje || 'Error al confirmar el pedido', 'error');
+        }
+    } catch (e) {
+        console.error('[confirmarPedido]', e);
+        mostrarToast('Error de conexión', 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Confirmar pedido';
+    }
+}
+
+
+// -------------------------------------------------------------------------
+// TOAST NOTIFICATIONS — available on every page
+// -------------------------------------------------------------------------
+
+/**
+ * Show a brief toast notification at the bottom of the screen.
+ * @param {string} msg  - Message to display.
+ * @param {string} tipo - 'ok' (green) or 'error' (red).
+ */
+function mostrarToast(msg, tipo = 'ok') {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notif' + (tipo === 'error' ? ' toast-error' : '');
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    // Trigger fade-in
+    setTimeout(() => toast.classList.add('toast-visible'), 10);
+
+    // Fade-out and remove after 2.8 s
+    setTimeout(() => {
+        toast.classList.remove('toast-visible');
+        setTimeout(() => toast.remove(), 400);
+    }, 2800);
+}
+
+</script>
+
+
+{# =========================================================================
+   PAGE CONTENT
+   ========================================================================= #}
 <main>
-    {% block content %}
-    {% endblock %}
+    {% block content %}{% endblock %}
 </main>
 
-<!-- ================= FOOTER ================= -->
+
+{# =========================================================================
+   FOOTER
+   ========================================================================= #}
 <footer class="main-footer">
 
     <div class="footer-section">
-        <h4>Mi Empresa</h4>
+        <h4>Local Hero</h4>
         <p>Tu tienda online de confianza.</p>
     </div>
 

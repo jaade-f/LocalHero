@@ -1,26 +1,21 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block title %}Iniciar Sesión - LocalHero{% endblock %}
 
-    <title>Login</title>
-</head>
-
-<body>
-
-<header>
-    <h1>Mi Empresa</h1>
-</header>
-
+{% block content %}
 <div class="layout">
 
     <aside>
         <h2>Bienvenido</h2>
         <p>Accede con tu usuario o crea una nueva cuenta.</p>
-        <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-empresa">
+
+        <div class="propietario-cta">
+            <h3>¿Tienes un negocio?</h3>
+            <p>Únete a LocalHero como propietario y salva alimentos que de otro modo se desperdiciarían.</p>
+            <a href="/registro-propietario" class="boton-propietario-cta">
+                Registra tu tienda →
+            </a>
+        </div>
     </aside>
 
     <main>
@@ -28,31 +23,97 @@
 
             <h2>Iniciar Sesión</h2>
 
-            <form action="/login" method="POST">
+            <!-- Mensajes flash del servidor (errores de sesión, etc.) -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="alerta-error">
+                {{ messages[0] }}
+            </div>
+            {% endif %}
+            {% endwith %}
 
-                <input type="text" name="usuario" placeholder="Usuario" required>
+            <div id="errorLogin" class="alerta-error" style="display:none;"></div>
 
-                <input type="password" name="clave" placeholder="Contraseña" required>
+            <form id="formLogin">
 
-                <a href="/recuperar" class="forgot-pass">
-                    ¿Has olvidado la contraseña?
-                </a>
+                <input type="email" name="correo" placeholder="Correo Electrónico" required
+                       autocomplete="email">
+                <input type="password" name="password" placeholder="Contraseña" required
+                       autocomplete="current-password">
 
-                <button type="submit" class="btn-login">Iniciar Sesión</button>
+
+
+                <button type="submit" class="boton-login" id="btnLogin">
+                    Iniciar Sesión
+                </button>
 
             </form>
 
-            <h3>¿No tienes una cuenta?</h3>
-            <a href="/registro" class="btn-registro">Registrarse</a>
+            <p class="login-link">¿No tienes una cuenta? <a href="/registro">Registrarse como usuario</a></p>
 
         </section>
     </main>
 
 </div>
 
-<footer>
-    <p>© 2026 - Todos los derechos reservados</p>
-</footer>
+<script>
+const errorDiv = document.getElementById("errorLogin");
+const btnLogin = document.getElementById("btnLogin");
 
-</body>
-</html>
+const MENSAJES_ERROR = {
+    400: "Faltan datos. Rellena correo y contraseña.",
+    401: "Contraseña incorrecta. Inténtalo de nuevo.",
+    404: "No existe ninguna cuenta con ese correo.",
+    500: "Error interno del servidor. Inténtalo más tarde.",
+    default: "No se pudo iniciar sesión. Comprueba tus datos."
+};
+
+document.getElementById("formLogin").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    errorDiv.style.display = "none";
+    btnLogin.disabled = true;
+    btnLogin.textContent = "Entrando...";
+
+    const form = e.target;
+    const data = new URLSearchParams();
+    data.append("correo", form.correo.value.trim());
+    data.append("password", form.password.value);
+
+    try {
+        const res = await fetch("/login", {
+            method: "POST",
+            body: data
+        });
+
+        if (res.redirected) {
+            window.location.href = res.url;
+            return;
+        }
+
+        // Intentar leer JSON con mensaje del servidor
+        let mensaje = MENSAJES_ERROR[res.status] || MENSAJES_ERROR.default;
+        try {
+            const body = await res.json();
+            if (body && body.mensaje) mensaje = body.mensaje;
+        } catch (_) {}
+
+        mostrarError(mensaje);
+
+    } catch (err) {
+        console.error("Login error:", err);
+        mostrarError("No se puede conectar con el servidor. Comprueba tu conexión.");
+    } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = "Iniciar Sesión";
+    }
+});
+
+function mostrarError(msg) {
+    errorDiv.textContent = "⚠️ " + msg;
+    errorDiv.style.display = "block";
+    errorDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+</script>
+
+{% endblock %}

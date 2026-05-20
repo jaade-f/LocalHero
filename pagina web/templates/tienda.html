@@ -1,93 +1,139 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tienda.nombre }}{% endblock %}
+{% block title %}{{ tienda.nombre_tienda }}{% endblock %}
 
 {% block content %}
 
 <section class="tienda-detalle">
 
-    <!-- IMAGEN PORTADA -->
-    <img src="{{ url_for('static', filename='img/logo.png') }}" class="tienda-portada" alt="{{ tienda.nombre }}">
+    <div id="tienda"></div>
 
-    <!-- INFO PRINCIPAL -->
-    <div class="tienda-info">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" class="tienda-logo" alt="Logo tienda">
-        <div class="tienda-info-texto">
-            <h1>{{ tienda.nombre }}</h1>
-            <p>📍 {{ tienda.direccion }}</p>
-            <p>🕐 Abierto · Cierra a las 21:00</p>
-            <span class="tienda-badge">{{ tienda.distancia }} km</span>
-        </div>
-    </div>
-
-    <!-- PRODUCTOS -->
     <div class="productos-seccion">
         <h2>Productos disponibles</h2>
-        <div class="productos-grid">
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Manzanas ecológicas</h4>
-                    <p>1 kg · Origen local</p>
-                    <span class="producto-precio">2,50 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Pan de masa madre</h4>
-                    <p>500 g · Artesano</p>
-                    <span class="producto-precio">3,20 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Leche fresca</h4>
-                    <p>1 L · Sin pasteurizar</p>
-                    <span class="producto-precio">1,80 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Tomates cherry</h4>
-                    <p>250 g · De temporada</p>
-                    <span class="producto-precio">1,90 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Queso curado</h4>
-                    <p>200 g · Artesano</p>
-                    <span class="producto-precio">4,50 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-            <div class="producto-card">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Producto">
-                <div class="producto-card-body">
-                    <h4>Aceite de oliva</h4>
-                    <p>500 ml · Virgen extra</p>
-                    <span class="producto-precio">6,00 €</span>
-                    <button class="btn-agregar">Añadir al pedido</button>
-                </div>
-            </div>
-
-        </div>
+        <div id="productos" class="productos-grid"></div>
     </div>
 
 </section>
+
+<script>
+async function cargarTienda() {
+
+    const id = window.location.pathname.split("/").pop(); //Get store if from URL
+
+    try {
+        //Load store
+    const resTienda = await fetch(`http://127.0.0.1:5000/api/tiendas/${id}`);
+
+    if (!resTienda.ok) {
+        throw new Error("Error cargando tienda");
+    }
+
+    const tienda = await resTienda.json();
+
+    let imagen = "tienda_portada.jpg";
+
+    try {
+        const imgs = JSON.parse(tienda.imagenes);
+        if (Array.isArray(imgs) && imgs.length > 0) {
+            imagen = imgs[0];
+        }
+    } catch (e) {
+        console.log("Error parseando imágenes:", e);
+    }
+
+    document.getElementById("tienda").innerHTML = `
+        <img
+            src="/static/img/${imagen}"
+            class="tienda-portada"
+        >
+        <div class="tienda-info">
+            <h1>${tienda.nombre_tienda}</h1>
+
+            <p>📍 ${tienda.direccion_tienda}</p>
+
+            <p>
+                🕒 ${tienda.horario || 'Horario no disponible'}
+            </p>
+        </div>
+    `;
+
+        //Load products
+
+        const resProductos = await fetch(
+            `http://127.0.0.1:5000/api/productos/tienda/${id}`
+        );
+
+        if (!resProductos.ok) {
+            throw new Error("Error cargando productos");
+        }
+
+        const productos = await resProductos.json();
+
+        const contenedor = document.getElementById("productos");
+
+        //If teher are no products
+
+        if (!productos.length) {
+
+            contenedor.innerHTML = `
+                <p class="sin-productos">
+                    No hay productos disponibles actualmente.
+                </p>
+            `;
+
+            return;
+        }
+
+        //Rednder products
+
+        contenedor.innerHTML = productos.map(p => `
+
+            <div class="producto-card">
+
+                <img
+                    src="/static/img/${p.imagen_producto || 'pordefecto.png'}"
+                    alt="${p.nombre}"
+                    class="producto-img"
+                >
+
+                <div class="producto-card-body">
+
+                    <h4>${p.nombre}</h4>
+
+                    <p class="producto-descripcion">
+                        ${p.descripcion || 'Sin descripción'}
+                    </p>
+
+                    <p class="producto-info">
+                        🌱 ${p.peso_kg || 0} kg salvados
+                    </p>
+
+                    <button
+                        class="boton-agregar"
+                        onclick='agregarAlCarrito(${JSON.stringify(p)})'
+                    >
+                        + Añadir al carrito
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+    } catch (err) {
+
+        console.error(err);
+
+        document.getElementById("productos").innerHTML = `
+            <p class="error-carga">
+                Error cargando tienda o productos.
+            </p>
+        `;
+    }
+}
+
+cargarTienda();
+</script>
 
 {% endblock %}

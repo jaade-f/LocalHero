@@ -14,7 +14,7 @@
     <div class="faq-lista">
 
         <div class="faq-categoria">
-            <h2 class="faq-categoria-titulo">🛒 Pedidos</h2>
+            <h2 class="faq-categoria-titulo">Pedidos</h2>
 
             <div class="faq-item">
                 <button class="faq-pregunta" onclick="toggleFaq(this)">
@@ -123,25 +123,27 @@
 
     <div class="faq-footer-cta">
         <p>¿No encontraste lo que buscabas?</p>
-        <a href="/contacto" class="btn-enviar">Contáctanos</a>
+        <a href="/contacto" class="boton-enviar">Contáctanos</a>
     </div>
 
 </section>
 
 <script>
-function toggleFaq(btn) {
-    const item = btn.parentElement;
+//To open and close FAQ items
+function toggleFaq(boton) {
+    const item = boton.parentElement;
     const respuesta = item.querySelector('.faq-respuesta');
-    const icono = btn.querySelector('.faq-icono');
+    const icono = boton.querySelector('.faq-icono');
     const abierto = item.classList.contains('abierto');
 
-    // cerrar todos
+    //Close all
     document.querySelectorAll('.faq-item.abierto').forEach(el => {
         el.classList.remove('abierto');
         el.querySelector('.faq-respuesta').style.maxHeight = null;
         el.querySelector('.faq-icono').textContent = '+';
     });
 
+    //Open all
     if (!abierto) {
         item.classList.add('abierto');
         respuesta.style.maxHeight = respuesta.scrollHeight + 'px';

@@ -6,53 +6,117 @@
 
 <div class="perfil-container">
 
-    <!-- CABECERA PERFIL -->
+    <!-- HEADER: avatar + nombre + logout -->
     <div class="perfil-header">
 
-        <img src="{{ url_for('static', filename='img/default-user.png') }}" class="perfil-foto">
+        <div class="perfil-foto-wrapper">
+            <img id="perfil-foto-preview"
+                 src="{{ usuario.imagen_perfil if usuario.imagen_perfil else '/static/img/pordefecto.png' }}"
+                 class="perfil-foto">
+            <label class="perfil-foto-cambiar" for="input-imagen-perfil" title="Cambiar foto">
+                📷
+            </label>
+            <input type="file" id="input-imagen-perfil" accept="image/*" style="display:none;">
+        </div>
 
         <div class="perfil-info">
-            <h2>{{ usuario.nombre }}</h2>
-            <p>{{ usuario.email }}</p>
+            <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
+            <p>{{ usuario.correo }}</p>
         </div>
 
+        <a href="/logout" class="boton-logout">🚪 Cerrar sesión</a>
+
     </div>
 
-    <!-- DATOS PERSONALES -->
-    <div class="perfil-datos">
+    <!-- FLASH -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="perfil-flash">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
 
-        <div class="dato">
-            <label>Dirección</label>
-            <p>{{ usuario.direccion }}</p>
+    <!-- KG SALVADOS -->
+    <div class="kg-salvados-card">
+        <div class="kg-salvados-icon">🌱</div>
+        <div>
+            <p class="kg-salvados-num">{{ usuario.total_kg }} kg</p>
+            <p class="kg-salvados-label">Total kg salvados</p>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('pedidos') }}" class="boton-ver-pedidos">Ver mis pedidos</a>
+    </div>
+
+    <!-- FORM -->
+    <form action="/actualizar_perfil" method="POST" enctype="multipart/form-data">
+
+        <input type="hidden" name="imagen_perfil_nombre" id="imagen-perfil-nombre-hidden">
+
+        <div class="perfil-datos">
+
+            <div class="dato">
+                <label>Usuario</label>
+                <input type="text" name="usuario" value="{{ usuario.usuario }}" placeholder="Nombre de usuario">
+            </div>
+
+            <div class="dato">
+                <label>Dirección</label>
+                <input type="text" name="direccion" value="{{ usuario.direccion or '' }}" placeholder="Tu dirección">
+            </div>
+
+            <div class="dato">
+                <label>Teléfono</label>
+                <input type="text" name="telefono" value="{{ usuario.telefono or '' }}" placeholder="Tu teléfono">
+            </div>
+
+            <div class="dato">
+                <label>Rol</label>
+                <p class="rol-badge">{{ usuario.rol }}</p>
+            </div>
+
+            <div class="perfil-acciones">
+                <button type="submit" class="boton-guardar">💾 Guardar cambios</button>
+            </div>
+
         </div>
 
-        <div class="dato">
-            <label>Código Postal</label>
-            <p>{{ usuario.codigo_postal }}</p>
-        </div>
-
-    </div>
-
-    <!-- BOTÓN EDITAR -->
-    <div class="perfil-acciones">
-        <a href="{{ url_for('editar_perfil') }}" class="btn">Editar perfil</a>
-    </div>
-
-    <!-- PESTAÑAS -->
-    <div class="perfil-tabs">
-
-        <a href="{{ url_for('perfil') }}" class="tab active">Datos</a>
-        <a href="{{ url_for('pedidos') }}" class="tab">Mis pedidos</a>
-
-    </div>
-
-    <!-- CONTENIDO DE LA PESTAÑA -->
-    <div class="perfil-contenido">
-
-        <p>Aquí puedes ver y gestionar tu información personal.</p>
-
-    </div>
+    </form>
 
 </div>
 
+<script>
+// Preview de imagen de perfil y subida al servidor
+const inputImg  = document.getElementById('input-imagen-perfil');
+const preview   = document.getElementById('perfil-foto-preview');
+const hiddenNombre = document.getElementById('imagen-perfil-nombre-hidden');
+
+inputImg.addEventListener('change', async function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    // Mostrar preview inmediato
+    const reader = new FileReader();
+    reader.onload = e => preview.src = e.target.result;
+    reader.readAsDataURL(file);
+
+    // Subir al servidor
+    const formData = new FormData();
+    formData.append('imagen', file);
+
+    try {
+        const res  = await fetch('/api/subir-imagen-perfil', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            hiddenNombre.value = data.nombre_archivo;
+        } else {
+            alert('Error al subir la imagen: ' + (data.mensaje || ''));
+        }
+    } catch (e) {
+        alert('No se pudo conectar con el servidor.');
+    }
+});
+</script>
+
 {% endblock %}
+

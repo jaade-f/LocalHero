@@ -1,77 +1,101 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block title %}Registro - Mi Empresa{% endblock %}
 
-    <title>Registro</title>
-</head>
+{% block content %}
+<div class="layout">
 
-<body>
+    <aside>
+        <h2>Crear Cuenta</h2>
+        <p>Regístrate completando el siguiente formulario.</p>
+    </aside>
 
-    <!-- HEADER -->
-    <header>
-        <h1>Mi Empresa</h1>
-    </header>
+    <main>
+        <section class="register-box">
 
-    <div class="layout">
+            <h2>Regístrate</h2>
 
-        <!-- ASIDE -->
-        <aside>
-            <h2>Crear Cuenta</h2>
-            <p>Regístrate completando el siguiente formulario.</p>
-        </aside>
+            <img src="{{ url_for('static', filename='img/logo.png') }}" 
+                 alt="Banner" 
+                 class="banner-registro">
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <main>
-            <section class="register-box">
+            <form id="formRegistro">
 
-                <h2>Regístrate</h2>
+                <input type="text" name="usuario" placeholder="Usuario" required>
 
-                <!-- BANNER -->
-                <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Banner" class="banner-registro">
+                <input type="email" name="correo" placeholder="Correo" required>
 
-                <form action="/registro" method="POST"><!-- LLEVAR ESTOS DATOS A LA BBDD -->
+                <input type="password" name="password" placeholder="Contraseña" required>
 
-                    <input type="text" name="usuario" placeholder="Usuario" required>
+                <input type="text" name="nombre" placeholder="Nombre"
+                    required
+                    pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                    title="Solo se permiten letras y espacios">
 
-                    <input type="email" name="correo" placeholder="Correo" required> <!-- HACER QUE CONTENGA UN @ -->
+                <input type="text" name="apellido" placeholder="Apellido"
+                    required
+                    pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                    title="Solo se permiten letras y espacios">
 
-                    <input type="password" name="clave" placeholder="Contraseña" required>
+                <input type="tel" name="telefono" placeholder="Teléfono"
+                    required
+                    pattern="[0-9]+"
+                    title="Solo se permiten números">
 
-                    <input type="text" name="nombre" placeholder="Nombre"
-                        required
-                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
-                        title="Solo se permiten letras y espacios">
+                <input type="text" name="direccion" placeholder="Dirección" required>
 
-                    <input type="text" name="apellido" placeholder="Apellido"
-                        required
-                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
-                        title="Solo se permiten letras y espacios">
+                <button type="submit" class="boton-registro">
+                    Registrarse
+                </button>
 
-                    <input type="tel" name="telefono" placeholder="Teléfono"  
-                        required
-                        pattern="[0-9]+"
-                        title="Solo se permiten números">
-                        <!-- PONER UNA LISTA DE NUMEROS DE PAISES MAS REPRESENTATIVOS PARA RELLENAR -->
+            </form>
 
-                    <input type="text" name="direccion" placeholder="Dirección" required>
+            <p class="login-link">¿Ya tienes cuenta? <a href="/">Inicia sesión</a></p>
 
-                    <button type="submit" class="boton-registro">Registrarse</button>
+        </section>
+    </main>
 
-                </form>
+</div>
 
-            </section>
-        </main>
+//CONNECTION WITH FLASK API
 
-    </div>
+<script>
+//Get the form element
+document.getElementById("formRegistro").addEventListener("submit", async function(e) {
 
-    <!-- FOOTER -->
-    <footer>
-        <p>© 2026 - Todos los derechos reservados</p>
-    </footer>
+    e.preventDefault();
 
-</body>
-</html>
+    const form = e.target;
+    //Create JSON object with user data
+    const data = {
+        usuario: form.usuario.value,
+        correo: form.correo.value,
+        password: form.password.value,
+        nombre: form.nombre.value,
+        apellido: form.apellido.value,
+        telefono: form.telefono.value,
+        direccion: form.direccion.value
+    };
+    //Send POST request to Flask API
+    const res = await fetch("http://127.0.0.1:5000/api/usuarios", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        //Convert object to JSON
+        body: JSON.stringify(data)
+    });
+    //Convert API response to JSON
+    const result = await res.json();
+
+    if (res.ok) {
+        alert("Registro correcto");
+        window.location.href = "/principal";
+    } else {
+        alert(result.mensaje || "Error al registrar");
+    }
+
+});
+</script>
+
+{% endblock %}

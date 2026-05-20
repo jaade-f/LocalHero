@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Crear mi Tienda - LocalHero{% endblock %}
+
+{% block content %}
+
+{# =========================================================================
+   CREATE STORE PAGE
+   Two-column layout: left form + right info cards.
+   The form POSTs directly to the API and redirects to the owner panel
+   on success, or shows an inline error message on failure.
+   ========================================================================= #}
+
+<div class="crear-tienda-wrapper">
+
+    <!-- Page header with back link -->
+    <div class="crear-tienda-header">
+        <a href="/propietario/panel" class="volver-link">← Volver al panel</a>
+        <h1>Crea tu tienda</h1>
+        <p>Completa los datos de tu establecimiento para empezar a publicar productos.</p>
+    </div>
+
+    <div class="crear-tienda-grid">
+
+        <!-- =================================================================
+             FORM COLUMN
+             ================================================================= -->
+        <div class="crear-tienda-form-col">
+            <section class="form-card">
+
+                <form id="formCrearTienda" data-uid="{{ session.get('usuario_id', '') }}">
+
+                    <div class="form-grupo-campo">
+                        <label>Nombre de la tienda *</label>
+                        <input type="text" name="nombre_tienda"
+                               placeholder="Ej: Panadería El Trigo" required>
+                    </div>
+
+                    <div class="form-grupo-campo">
+                        <label>Descripción</label>
+                        <textarea name="descripcion"
+                                  placeholder="Cuéntanos sobre tu tienda, qué productos ofreces..."></textarea>
+                    </div>
+
+                    <div class="form-grupo-campo">
+                        <label>Dirección *</label>
+                        <input type="text" name="direccion_tienda"
+                               placeholder="Calle, número, piso..." required>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="form-grupo-campo">
+                            <label>Ciudad *</label>
+                            <input type="text" name="ciudad" placeholder="Valencia" required>
+                        </div>
+                        <div class="form-grupo-campo">
+                            <label>Código postal</label>
+                            <input type="text" name="codigo_postal" placeholder="46001">
+                        </div>
+                    </div>
+
+                    <div class="form-grupo-campo">
+                        <label>Teléfono de contacto</label>
+                        <input type="tel" name="telefono" placeholder="Ej: 961234567">
+                    </div>
+
+                    <div class="form-grupo-campo">
+                        <label>Horario</label>
+                        <input type="text" name="horario"
+                               placeholder="Ej: Lun-Vie 9:00-20:00 / Sáb 10:00-14:00">
+                    </div>
+
+                    <!-- Optional GPS coordinates for map display -->
+                    <div class="input-row">
+                        <div class="form-grupo-campo">
+                            <label>Latitud (opcional)</label>
+                            <input type="number" name="latitud"
+                                   placeholder="39.4699" step="0.0001">
+                        </div>
+                        <div class="form-grupo-campo">
+                            <label>Longitud (opcional)</label>
+                            <input type="number" name="longitud"
+                                   placeholder="-0.3763" step="0.0001">
+                        </div>
+                    </div>
+
+                    <div class="form-grupo-campo">
+                        <label>Imagen de portada</label>
+                        <input type="text" name="imagen_portada"
+                               placeholder="Nombre del archivo (ej: mi_tienda.jpg)">
+                        <small>Sube la imagen primero a la carpeta /static/img/</small>
+                    </div>
+
+                    <!-- Inline error message box -->
+                    <div id="errorCrear" class="error-msg" style="display:none;"></div>
+
+                    <button type="submit" class="boton-login" id="btnCrear">
+                        Crear mi tienda
+                    </button>
+
+                </form>
+
+            </section>
+        </div>
+
+        <!-- =================================================================
+             INFO COLUMN — benefits and next-steps cards
+             ================================================================= -->
+        <div class="crear-tienda-info-col">
+
+            <div class="info-card">
+                <h3>¿Por qué unirte a LocalHero?</h3>
+                <ul>
+                    <li>Conecta con clientes concienciados con el medio ambiente</li>
+                    <li>Reduce el desperdicio de alimentos</li>
+                    <li>Gestiona tu stock de forma sencilla</li>
+                    <li>Recibe pedidos y confirma recogidas</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>Próximos pasos</h3>
+                <ol>
+                    <li>Crea tu tienda</li>
+                    <li>Añade tus primeros productos</li>
+                    <li>Los clientes los descubren</li>
+                    <li>Confirma la recogida</li>
+                </ol>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{# =========================================================================
+   STYLES — scoped to this page
+   ========================================================================= #}
+{# =========================================================================
+   JAVASCRIPT — store creation form submission
+   POSTs to the API and handles success / error inline.
+   ========================================================================= #}
+<script>
+
+const API      = "http://127.0.0.1:5000/api";
+// Read from data attribute — avoids Jinja inside JS (fixes linter errors)
+const OWNER_ID = parseInt(document.getElementById('formCrearTienda').dataset.uid) || null;
+
+document.getElementById("formCrearTienda").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const form     = e.target;
+    const btn      = document.getElementById("btnCrear");
+    const errorDiv = document.getElementById("errorCrear");
+
+    // Reset UI state
+    btn.disabled        = true;
+    btn.textContent     = "Creando...";
+    errorDiv.style.display = "none";
+
+    // Build the imagenes JSON array from the single filename input
+    const imageFilename = form.imagen_portada.value.trim();
+    const imagenes      = JSON.stringify(imageFilename ? [imageFilename] : []);
+
+    const payload = {
+        propietario_id:   OWNER_ID,
+        nombre_tienda:    form.nombre_tienda.value,
+        descripcion:      form.descripcion.value,
+        direccion_tienda: form.direccion_tienda.value,
+        ciudad:           form.ciudad.value,
+        codigo_postal:    form.codigo_postal.value,
+        telefono:         form.telefono.value,
+        horario:          form.horario.value,
+        latitud:          form.latitud.value  ? parseFloat(form.latitud.value)  : null,
+        longitud:         form.longitud.value ? parseFloat(form.longitud.value) : null,
+        imagenes
+    };
+
+    try {
+        const res  = await fetch(`${API}/tiendas`, {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("¡Tienda creada con éxito! Ahora puedes añadir productos.");
+            window.location.href = "/propietario/panel";
+        } else {
+            errorDiv.textContent   = data.mensaje || "Error al crear la tienda.";
+            errorDiv.style.display = "block";
+            btn.disabled           = false;
+            btn.textContent        = "Crear mi tienda";
+        }
+
+    } catch (err) {
+        console.error("[formCrearTienda]", err);
+        errorDiv.textContent   = "Cannot connect to the server. Please try again.";
+        errorDiv.style.display = "block";
+        btn.disabled           = false;
+        btn.textContent        = "Crear mi tienda";
+    }
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Registra tu Tienda - LocalHero{% endblock %}
+
+{% block content %}
+
+<div class="layout">
+
+    <aside class="aside-propietario">
+        <div class="aside-badge">Para negocios</div>
+        <h2>Únete como propietario</h2>
+        <p>Forma parte de la comunidad LocalHero y contribuye a reducir el desperdicio alimentario en tu zona.</p>
+
+        <ul class="beneficios-lista">
+            <li>Gestiona tu tienda online</li>
+            <li>Publica productos con stock limitado</li>
+            <li>Conecta con clientes comprometidos</li>
+            <li>Reduce tu desperdicio alimentario</li>
+            <li>Panel de control completo</li>
+        </ul>
+
+        <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-empresa">
+    </aside>
+
+    <main>
+        <section class="register-box">
+
+            <h2>Registro de Propietario</h2>
+            <p class="subtitulo-registro">Crea tu cuenta de propietario para gestionar tu tienda en LocalHero.</p>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <p class="flash-error">{{ messages[0] }}</p>
+            {% endif %}
+            {% endwith %}
+
+            <form id="formRegistroPropietario">
+
+                <fieldset class="form-grupo">
+                    <legend>Datos personales</legend>
+
+                    <input type="text" name="usuario" placeholder="Nombre de usuario" required>
+                    <input type="email" name="correo" placeholder="Correo electrónico" required>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+
+                    <div class="input-row">
+                        <input type="text" name="nombre" placeholder="Nombre"
+                            required pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                            title="Solo letras y espacios">
+                        <input type="text" name="apellido" placeholder="Apellido"
+                            required pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                            title="Solo letras y espacios">
+                    </div>
+
+                    <input type="tel" name="telefono" placeholder="Teléfono"
+                        required pattern="[0-9]+" title="Solo números">
+                    <input type="text" name="direccion" placeholder="Dirección personal" required>
+                </fieldset>
+
+                <button type="submit" class="boton-login">
+                    Crear cuenta de propietario
+                </button>
+
+            </form>
+
+            <p class="login-link">¿Ya tienes cuenta? <a href="/">Inicia sesión</a></p>
+
+        </section>
+    </main>
+
+</div>
+
+<script>
+//Listen for the form submission and execute the registration process
+document.getElementById("formRegistroPropietario").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const form = e.target;
+    const btn = form.querySelector("button[type=submit]");
+
+    btn.disabled = true;
+    btn.textContent = "Creando cuenta";
+    
+    // Create JSON object with form data
+    const data = {
+        usuario: form.usuario.value,
+        correo: form.correo.value,
+        password: form.password.value,
+        nombre: form.nombre.value,
+        apellido: form.apellido.value,
+        telefono: form.telefono.value,
+        direccion: form.direccion.value,
+        rol: "propietario"
+    };
+
+    try {
+        const res = await fetch("http://127.0.0.1:5000/api/usuarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+        // Convert response to JSON
+        const result = await res.json();
+
+        if (res.ok) {
+            alert("Cuenta creada correctamente. Ya puedes iniciar sesión.");
+            window.location.href = "/";
+        } else {
+            alert(result.mensaje || "Error al registrar");
+            btn.disabled = false;
+            btn.textContent = "Crear cuenta de propietario";
+        }
+    } catch (err) {
+        alert("Error de conexión con el servidor");
+        btn.disabled = false;
+        btn.textContent = "Crear cuenta de propietario";
+    }
+});
+</script>
+
+{% endblock %}

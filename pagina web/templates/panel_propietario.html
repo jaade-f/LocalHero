@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Propietario - LocalHero{% endblock %}
+
+{% block content %}
+
+{# =========================================================================
+   OWNER DASHBOARD
+   Shows store cover, stats, product table (add/edit/pause/delete)
+   and a list of pending pickup orders.
+   All data is loaded via fetch() from the API on page load.
+   ========================================================================= #}
+
+<div class="panel-propietario" data-uid="{{ session.get('usuario_id', '') }}">
+
+    <!-- =====================================================================
+         DASHBOARD HEADER
+         ===================================================================== -->
+    <div class="panel-header">
+        <div class="panel-header-info">
+            <span class="panel-badge">Panel de Propietario</span>
+            <h1>Hola, {{ nombre }} </h1>
+            <p>Gestiona tu tienda y productos desde aquí.</p>
+        </div>
+        <!-- "Create my store" button — hidden once a store is loaded -->
+        <a href="/propietario/crear-tienda" class="boton-crear-tienda" id="btnCrearTienda">
+            + Crear mi tienda
+        </a>
+    </div>
+
+    <!-- =====================================================================
+         DYNAMIC CONTENT — populated by initDashboard()
+         ===================================================================== -->
+    <div id="panelContenido">
+        <!-- Initial loading state -->
+        <div class="cargando-panel">
+            <div class="spinner"></div>
+            <p>Cargando tu tienda...</p>
+        </div>
+    </div>
+
+</div>
+
+
+{# =========================================================================
+   PRODUCT MODAL — used for both "add new product" and "edit product"
+   Fields are populated by openNewModal() / openEditModal() respectively.
+   ========================================================================= #}
+<div class="modal-overlay" id="modalProducto">
+    <div class="modal-box">
+
+        <h3 id="modalTitulo">Añadir producto</h3>
+
+        <!-- Hidden field — empty when creating, set to product ID when editing -->
+        <input type="hidden" id="modalProductoId">
+
+        <input  type="text"   id="prodNombre"      placeholder="Nombre del producto" required>
+        <textarea             id="prodDescripcion" placeholder="Descripción del producto"></textarea>
+        <input  type="number" id="prodPeso"        placeholder="Peso en kg (ej: 0.5)" step="0.1" min="0.1">
+        <input  type="text"   id="prodImagen"      placeholder="Nombre del archivo de imagen (ej: pan.jpg)">
+        <input  type="date"   id="prodCaducidad"   placeholder="Fecha de caducidad">
+
+        <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; font-size:0.9rem; color:#444;">
+            <input type="checkbox" id="prodDisponible" checked style="width:auto; margin:0;">
+            Disponible para reserva
+        </label>
+
+        <div class="modal-acciones">
+            <button class="btn-cancelar" onclick="closeModal()">Cancelar</button>
+            <button class="btn-guardar"  id="btnGuardarProducto" onclick="saveProduct()">Guardar</button>
+        </div>
+
+    </div>
+</div>
+
+
+{# =========================================================================
+   STYLES
+   ========================================================================= #}
+{# =========================================================================
+   JAVASCRIPT — dashboard logic
+   ========================================================================= #}
+<script>
+
+const API        = "http://127.0.0.1:5000/api";
+// Read from data attribute — avoids Jinja inside JS (fixes linter errors)
+const OWNER_ID = parseInt(document.querySelector('.panel-propietario').dataset.uid) || null;
+
+let currentStore = null;   // store object loaded from the API
+
+// =========================================================================
+// INIT — fetch the owner's store on page load
+// =========================================================================
+async function initDashboard() {
+    try {
+        const res = await fetch(`${API}/tiendas/propietario/${OWNER_ID}`);
+
+        if (res.status === 404) {
+            showNoStoreMessage();
+            return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        currentStore = await res.json();
+
+        // Hide the "Create my store" button — owner already has one
+        document.getElementById("btnCrearTienda").classList.add("oculto");
+
+        renderDashboard(currentStore);
+
+    } catch (err) {
+        console.error("[initDashboard]", err);
+        showNoStoreMessage();
+    }
+}
+
+// =========================================================================
+// NO STORE — shown when the owner has not created a store yet
+// =========================================================================
+function showNoStoreMessage() {
+    document.getElementById("panelContenido").innerHTML = `
+        <div class="sin-tienda-msg">
+            <div class="icono-grande">🏪</div>
+            <h2>Aún no tienes tienda</h2>
+            <p>Crea tu tienda para empezar a publicar productos y conectar con clientes.</p>
+            <a href="/propietario/crear-tienda" class="boton-crear-tienda">
+                + Crear mi tienda
+            </a>
+        </div>
+    `;
+}
+
+// =========================================================================
+// RENDER FULL DASHBOARD — store cover, stats, products, orders
+// =========================================================================
+async function renderDashboard(store) {
+
+    // Resolve the first cover image or fall back to a default
+    let coverImage = "tienda_default.jpg";
+    try {
+        const imgs = JSON.parse(store.imagenes || "[]");
+        if (Array.isArray(imgs) && imgs.length > 0) coverImage = imgs[0];
+    } catch (_) {}
+
+    // Fetch all products (including unavailable) and active orders in parallel
+    const [resProducts, resOrders] = await Promise.all([
+        fetch(`${API}/productos/tienda/${store.id_tienda}?todos=1`),
+        fetch(`${API}/pedidos/tienda/${store.id_tienda}`)
+    ]);
+
+    const products = resProducts.ok ? await resProducts.json() : [];
+    const orders   = resOrders.ok   ? await resOrders.json()   : [];
+
+    // Compute stats
+    const totalAvailable = products.filter(p => p.disponible == 1).length;
+    const totalSaved     = products.filter(p => p.disponible == 0).length;
+
+    document.getElementById("panelContenido").innerHTML = `
+
+        <!-- Store cover -->
+        <div class="tienda-portada-panel">
+            <img src="/static/img/${coverImage}"
+                 alt="${store.nombre_tienda}"
+                 onerror="this.src='/static/img/tienda_default.png'">
+            <div class="tienda-portada-overlay">
+                <h2>${store.nombre_tienda}</h2>
+            </div>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-num">${products.length}</div>
+                <div class="stat-label">Productos publicados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">${totalAvailable}</div>
+                <div class="stat-label">Disponibles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">${totalSaved}</div>
+                <div class="stat-label">Salvados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">${orders.length}</div>
+                <div class="stat-label">Pedidos activos</div>
+            </div>
+        </div>
+
+        <!-- Products table -->
+        <div class="seccion-productos">
+            <div class="seccion-header">
+                <h3>Mis productos</h3>
+                <button class="boton-nuevo-producto" onclick="openNewModal()">
+                    + Nuevo producto
+                </button>
+            </div>
+            <div id="productsTableWrapper">
+                ${buildProductsTable(products)}
+            </div>
+        </div>
+
+        <!-- Pending pickup orders -->
+        <div class="seccion-pedidos">
+            <div class="seccion-header">
+                <h3>Pedidos pendientes de recogida</h3>
+            </div>
+            <div id="ordersList">
+                ${buildOrdersList(orders)}
+            </div>
+        </div>
+    `;
+}
+
+// =========================================================================
+// BUILD PRODUCTS TABLE HTML
+// =========================================================================
+function buildProductsTable(products) {
+    if (!products.length) {
+        return `<div class="vacio-msg">No hay productos todavía. ¡Añade el primero!</div>`;
+    }
+
+    const rows = products.map(p => {
+        // Escape product data for safe inline onclick attribute embedding
+        const pJson = JSON.stringify(p).replace(/"/g, '&quot;');
+
+        // Truncate long descriptions to 50 characters
+        const desc = p.descripcion
+            ? p.descripcion.substring(0, 50) + (p.descripcion.length > 50 ? '...' : '')
+            : '';
+
+        return `
+            <tr>
+                <td data-label="Imagen">
+                    <img src="/static/img/${p.imagen_producto || 'pordefecto.png'}"
+                         class="producto-thumb"
+                         onerror="this.src='/static/img/pordefecto.png'">
+                </td>
+                <td data-label="Nombre">
+                    <div class="producto-nombre">${p.nombre}</div>
+                    <div class="producto-desc">${desc}</div>
+                </td>
+                <td data-label="Peso">${p.peso_kg || '-'} kg</td>
+                <td data-label="Caducidad">
+                    ${p.fecha_caducidad ? formatDate(p.fecha_caducidad) : '-'}
+                </td>
+                <td data-label="Estado">
+                    ${p.disponible == 1
+                        ? '<span class="badge-disponible">✅ Disponible</span>'
+                        : '<span class="badge-agotado">⏸ Agotado</span>'
+                    }
+                </td>
+                <td data-label="Acciones">
+                    <div class="acciones-producto">
+                        <button class="btn-editar"
+                                onclick="openEditModal(${pJson})">✏️ Editar</button>
+                        <button class="btn-eliminar"
+                                onclick="deleteProduct(${p.id_producto}, '${p.nombre.replace(/'/g, "\\'")}')">
+                            Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <table class="tabla-productos">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Producto</th>
+                    <th>Peso</th>
+                    <th>Caducidad</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+}
+
+// =========================================================================
+// BUILD ORDERS LIST HTML
+// =========================================================================
+function buildOrdersList(orders) {
+    if (!orders.length) {
+        return `<div class="vacio-msg">No hay pedidos pendientes de recogida.</div>`;
+    }
+
+    return orders.map(order => `
+        <div class="pedido-row" id="pedido-${order.id_salvado}">
+            <div>
+                <div class="pedido-info">
+                    ${order.cliente_nombre || 'Cliente'} —
+                    <strong>${order.producto_nombre}</strong>
+                </div>
+                <div class="pedido-sub">
+                    ${order.peso_salvado} kg · ${formatDate(order.fecha)}
+                </div>
+            </div>
+            <button class="btn-confirmar-recogida"
+                    onclick="confirmPickup(${order.id_salvado})">
+                Confirmar recogida
+            </button>
+        </div>
+    `).join('');
+}
+
+// =========================================================================
+// MODAL — open for new product
+// =========================================================================
+function openNewModal() {
+    document.getElementById("modalTitulo").textContent     = "Añadir producto";
+    document.getElementById("modalProductoId").value       = "";
+    document.getElementById("prodNombre").value            = "";
+    document.getElementById("prodDescripcion").value       = "";
+    document.getElementById("prodPeso").value              = "";
+    document.getElementById("prodImagen").value            = "";
+    document.getElementById("prodCaducidad").value         = "";
+    document.getElementById("prodDisponible").checked      = true;
+    document.getElementById("modalProducto").classList.add("activo");
+}
+
+// =========================================================================
+// MODAL — open for editing an existing product
+// =========================================================================
+function openEditModal(product) {
+    document.getElementById("modalTitulo").textContent     = "Editar producto";
+    document.getElementById("modalProductoId").value       = product.id_producto;
+    document.getElementById("prodNombre").value            = product.nombre        || "";
+    document.getElementById("prodDescripcion").value       = product.descripcion   || "";
+    document.getElementById("prodPeso").value              = product.peso_kg       || "";
+    document.getElementById("prodImagen").value            = product.imagen_producto || "";
+    document.getElementById("prodCaducidad").value         = product.fecha_caducidad
+        ? product.fecha_caducidad.substring(0, 10)
+        : "";
+    document.getElementById("prodDisponible").checked      = product.disponible == 1;
+    document.getElementById("modalProducto").classList.add("activo");
+}
+
+/** Close the product modal. */
+function closeModal() {
+    document.getElementById("modalProducto").classList.remove("activo");
+}
+
+// Close modal when clicking the backdrop
+document.getElementById("modalProducto").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeModal();
+});
+
+// =========================================================================
+// SAVE PRODUCT — create (POST) or update (PUT) depending on modal state
+// =========================================================================
+async function saveProduct() {
+    if (!currentStore) return;
+
+    const productId = document.getElementById("modalProductoId").value;
+    const btn       = document.getElementById("btnGuardarProducto");
+
+    btn.disabled    = true;
+    btn.textContent = "Guardando...";
+
+    const payload = {
+        tienda_id:        currentStore.id_tienda,
+        nombre:           document.getElementById("prodNombre").value,
+        descripcion:      document.getElementById("prodDescripcion").value,
+        peso_kg:          parseFloat(document.getElementById("prodPeso").value) || null,
+        imagen_producto:  document.getElementById("prodImagen").value  || null,
+        fecha_caducidad:  document.getElementById("prodCaducidad").value || null,
+        disponible:       document.getElementById("prodDisponible").checked ? 1 : 0
+    };
+
+    try {
+        const url    = productId ? `${API}/productos/${productId}` : `${API}/productos`;
+        const method = productId ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            closeModal();
+            mostrarToast(productId ? "Producto actualizado ✅" : "Producto añadido ✅");
+            await initDashboard();   // refresh the full dashboard
+        } else {
+            const err = await res.json();
+            mostrarToast(err.mensaje || "Error al guardar", "error");
+        }
+
+    } catch (e) {
+        console.error("[saveProduct]", e);
+        mostrarToast("Connection error", "error");
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = "Guardar";
+    }
+}
+
+// =========================================================================
+// DELETE PRODUCT — asks for confirmation before sending DELETE request
+// =========================================================================
+async function deleteProduct(id, name) {
+    if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`${API}/productos/${id}`, {
+            method:  "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ propietario_id: OWNER_ID })
+        });
+
+        if (res.ok) {
+            mostrarToast("Producto eliminado");
+            await initDashboard();
+        } else {
+            const err = await res.json();
+            mostrarToast(err.mensaje || "Error al eliminar", "error");
+        }
+
+    } catch (e) {
+        console.error("[deleteProduct]", e);
+        mostrarToast("Connection error", "error");
+    }
+}
+
+// =========================================================================
+// TOGGLE AVAILABILITY — flip disponible between 1 and 0
+// =========================================================================
+async function toggleAvailability(id, currentState) {
+    const newState = currentState == 1 ? 0 : 1;
+
+    try {
+        const res = await fetch(`${API}/productos/${id}`, {
+            method:  "PUT",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ disponible: newState })
+        });
+
+    } catch (e) {
+        console.error("[toggleAvailability]", e);
+        mostrarToast("Connection error", "error");
+    }
+}
+
+// =========================================================================
+// CONFIRM PICKUP — mark an order as 'recogido'
+// =========================================================================
+async function confirmPickup(orderId) {
+    try {
+        const res = await fetch(`${API}/salvados/${orderId}/confirmar`, {
+            method:  "PUT",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (res.ok) {
+            mostrarToast("Recogida confirmada");
+            // Remove the order row from the DOM without a full reload
+            document.getElementById(`pedido-${orderId}`)?.remove();
+        } else {
+            mostrarToast("Error al confirmar", "error");
+        }
+
+    } catch (e) {
+        console.error("[confirmPickup]", e);
+        mostrarToast("Connection error", "error");
+    }
+}
+
+// =========================================================================
+// UTILITY — format an ISO date string as "DD Mon YYYY"
+// =========================================================================
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', {
+        day:   '2-digit',
+        month: 'short',
+        year:  'numeric'
+    });
+}
+
+// =========================================================================
+// BOOT
+// =========================================================================
+initDashboard();
+
+</script>
+
+{% endblock %}

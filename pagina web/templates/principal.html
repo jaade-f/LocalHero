@@ -1,73 +1,480 @@
 {% extends "base.html" %}
 
-{% block title %}Principal{% endblock %}
+{% block title %}Principal - LocalHero{% endblock %}
 
 {% block content %}
 
+{# =========================================================================
+   MAIN / PRINCIPAL PAGE
+   Layout: banner → [category aside | store grid] → owner banner
+   ========================================================================= #}
+
 <section class="home">
 
-    <!-- BANNER IMAGEN CENTRADA -->
-    <img src="{{ url_for('static', filename='img/banner.jpg') }}" class="header-banner" alt="Banner principal">
 
-    <!-- HEADER TIENDAS CERCANAS -->
-    <div class="tiendas-header">
-        <h1>Tiendas cercanas</h1>
-        <p>Explora tiendas disponibles cerca de tu ubicación.</p>
-        <a href="/tiendas" class="btn-ver-todas">Ver todas las tiendas</a>
+    <!-- =====================================================================
+         TWO-COLUMN LAYOUT: category aside (left) + store grid (right)
+         ===================================================================== -->
+    <div class="principal-layout">
+
+        <!-- =================================================================
+             ASIDE — CATEGORY FILTER
+             Sticky sidebar with one button per category.
+             Clicking a button calls filtrarPorCategoria() in the script below.
+             ================================================================= -->
+        <aside class="categorias-aside">
+
+            <div class="categorias-aside-header">
+                <h3>🗂 Categorías</h3>
+            </div>
+
+            <ul class="categorias-lista" id="categoriaLista">
+
+                <!-- "All" option — resets any active filter -->
+                <li>
+                    <button class="categoria-btn activo" data-categoria="todas">
+                        <span class="cat-icon">🌍</span>
+                        <span class="cat-nombre">Todas</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="animales">
+                        <span class="cat-icon">🐾</span>
+                        <span class="cat-nombre">Animales</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="comida rapida">
+                        <span class="cat-icon">🍔</span>
+                        <span class="cat-nombre">Comida rápida</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="jardineria">
+                        <span class="cat-icon">🌿</span>
+                        <span class="cat-nombre">Jardinería</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="panaderia">
+                        <span class="cat-icon">🥖</span>
+                        <span class="cat-nombre">Panadería</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="ropa">
+                        <span class="cat-icon">👕</span>
+                        <span class="cat-nombre">Ropa</span>
+                    </button>
+                </li>
+
+                <li>
+                    <button class="categoria-btn" data-categoria="verduleria">
+                        <span class="cat-icon">🥦</span>
+                        <span class="cat-nombre">Verdulería</span>
+                    </button>
+                </li>
+
+            </ul>
+
+            <!-- Mobile pill showing the active filter with a clear button -->
+            <div class="filtro-activo-pill" id="filtroActivoPill" style="display:none;">
+                Filtrando: <strong id="filtroActivoTexto"></strong>
+                <button onclick="limpiarFiltro()">✕</button>
+            </div>
+
+        </aside>
+
+        <!-- =================================================================
+             MAIN CONTENT — STORE GRID
+             Populated dynamically by cargarTiendas() below.
+             ================================================================= -->
+        <div class="principal-contenido">
+
+            <!-- Header row: title + results counter -->
+            <div class="tiendas-header">
+                <div>
+                    <h1 id="tituloPrincipal">Tiendas cercanas</h1>
+                    <p id="subtituloPrincipal">
+                        Explora tiendas disponibles cerca de tu ubicación.
+                    </p>
+                </div>
+                <!-- Counter badge — only visible when a category filter is active -->
+                <div id="contadorTiendas" class="contador-tiendas" style="display:none;">
+                    <span id="numTiendas">0</span> tiendas
+                </div>
+            </div>
+
+            <!-- Store cards are injected here -->
+            <div id="tiendas" class="tiendas-grid">
+                <div class="cargando-tiendas">
+                    <div class="spinner-tiendas"></div>
+                    <p>Cargando tiendas...</p>
+                </div>
+            </div>
+
+            <!-- Empty state — shown when no stores match the active filter -->
+            <div id="sinResultados" class="sin-resultados" style="display:none;">
+                <div class="sin-resultados-icon">🔍</div>
+                <h3>Sin tiendas en esta categoría</h3>
+                <p>Ninguna tienda tiene productos de esta categoría todavía.</p>
+                <button class="boton-ver-todas" onclick="limpiarFiltro()">
+                    Ver todas las tiendas
+                </button>
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="tiendas-grid">
+    <!-- =====================================================================
+         OWNER BANNER — call-to-action for businesses to join LocalHero
+         ===================================================================== -->
+    <section class="propietarios-banner">
+        <div class="propietarios-banner-inner">
 
-        <a href="/tienda" class="tienda-card tienda1">
-            <div class="overlay">
-                <h3>Tienda Verde</h3>
-                <p>Calle Mayor 12</p>
-                <span>1.2 km</span>
+            <div class="propietarios-texto">
+                <span class="prop-tag">¿Tienes un negocio?</span>
+                <h2>Únete a LocalHero como propietario</h2>
+                <p>
+                    Publica tus productos con excedente, conecta con clientes
+                    comprometidos con el consumo responsable y contribuye a reducir
+                    el desperdicio alimentario en tu comunidad.
+                </p>
+                <div class="prop-beneficios">
+                    <span>Panel de gestión completo</span>
+                    <span>Subida de productos sencilla</span>
+                    <span>Confirmación de recogidas</span>
+                    <span>Sin comisiones</span>
+                </div>
+
             </div>
-        </a>
 
-        <a href="/tienda/2" class="tienda-card tienda2">
-            <div class="overlay">
-                <h3>Eco Market</h3>
-                <p>Avenida Sol 45</p>
-                <span>2.5 km</span>
+            <!-- Decorative preview card -->
+            <div class="propietarios-ilustracion">
+                <div class="prop-card-demo">
+                    <div class="prop-demo-icon">🌱</div>
+                    <p>Tu tienda en LocalHero</p>
+                    <div class="prop-demo-stats">
+                        <span>Gestiona productos</span>
+                        <span>Recibe pedidos</span>
+                        <span>Ve tus estadísticas</span>
+                    </div>
+                </div>
             </div>
-        </a>
 
-        <a href="/tienda/3" class="tienda-card tienda3">
-            <div class="overlay">
-                <h3>Fresh Store</h3>
-                <p>Calle Luna 8</p>
-                <span>0.9 km</span>
-            </div>
-        </a>
-
-        <a href="/tienda/4" class="tienda-card tienda4">
-            <div class="overlay">
-                <h3>Bio Shop</h3>
-                <p>Gran Vía 21</p>
-                <span>3.1 km</span>
-            </div>
-        </a>
-
-        <a href="/tienda/5" class="tienda-card tienda5">
-            <div class="overlay">
-                <h3>Natural Market</h3>
-                <p>Calle Norte 3</p>
-                <span>1.8 km</span>
-            </div>
-        </a>
-
-        <a href="/tienda/6" class="tienda-card tienda6">
-            <div class="overlay">
-                <h3>Green Shop</h3>
-                <p>Calle Sur 99</p>
-                <span>2.2 km</span>
-            </div>
-        </a>
-
-    </div>
+        </div>
+    </section>
 
 </section>
+
+{# =========================================================================
+   STYLES — scoped to this page
+   ========================================================================= #}
+
+{# =========================================================================
+   JAVASCRIPT — store loading and category filtering
+   ========================================================================= #}
+<script>
+
+const API = "http://127.0.0.1:5000/api";
+
+// -------------------------------------------------------------------------
+// Category → keyword mapping
+// A store is considered to belong to a category if any of its products
+// contain at least one keyword in their name or description.
+// -------------------------------------------------------------------------
+const CATEGORY_KEYWORDS = {
+    "animales":      ["animal", "mascota", "perro", "gato", "pienso",
+                      "veterinario", "acuario", "pájaro", "conejo",
+                      "hamster", "reptil"],
+    "comida rapida": ["burger", "hamburgues", "pizza", "bocadillo",
+                      "sandwich", "wrap", "kebab", "frito", "nugget",
+                      "hot dog", "taco", "comida rápida", "comida rapida",
+                      "snack"],
+    "jardineria":    ["planta", "flor", "jardín", "jardinería", "maceta",
+                      "semilla", "abono", "tierra", "poda", "cactus",
+                      "suculenta", "hierba"],
+    "panaderia":     ["pan", "panadería", "bollería", "croissant",
+                      "baguette", "hogaza", "bollo", "bizcocho", "pastel",
+                      "tarta", "repostería", "galleta", "muffin", "brioche"],
+    "ropa":          ["ropa", "camiseta", "pantalón", "camisa", "vestido",
+                      "chaqueta", "abrigo", "calcetín", "zapato",
+                      "zapatilla", "sudadera", "jersey", "falda", "tejido"],
+    "verduleria":    ["verdura", "fruta", "tomate", "lechuga", "zanahoria",
+                      "pepino", "pimiento", "cebolla", "ajo", "patata",
+                      "espinaca", "brócoli", "col", "acelga", "naranja",
+                      "manzana", "uva", "pera", "limón", "plátano"]
+};
+
+// Global state
+let allStores       = [];       // full list fetched from the API
+let activeCategory  = "todas";  // currently selected category key
+
+// -------------------------------------------------------------------------
+// INIT — fetch stores, enrich with categories, then render
+// -------------------------------------------------------------------------
+async function cargarTiendas() {
+    try {
+        const res = await fetch(`${API}/tiendas`);
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+        allStores = await res.json();
+
+        // Fetch products for every store in parallel to detect categories
+        await enrichWithCategories();
+
+        // Update sidebar badges with store counts per category
+        updateCategoryBadges();
+
+        // Render the initial (unfiltered) store grid
+        renderStores(allStores);
+
+    } catch (err) {
+        console.error("[cargarTiendas]", err);
+        document.getElementById("tiendas").innerHTML = `
+            <p style="color:#c62828; text-align:center; padding:2rem;">
+                ⚠️ Error al cargar las tiendas. Comprueba tu conexión.
+            </p>`;
+    }
+}
+
+// -------------------------------------------------------------------------
+// ENRICH — attach a _categorias array to each store object
+// Makes parallel API calls to avoid sequential bottleneck.
+// -------------------------------------------------------------------------
+async function enrichWithCategories() {
+    const requests = allStores.map(async (store) => {
+        try {
+            const r        = await fetch(`${API}/productos/tienda/${store.id_tienda}`);
+            const products = r.ok ? await r.json() : [];
+            store._categorias = detectCategories(products);
+        } catch (_) {
+            store._categorias = [];
+        }
+    });
+    await Promise.all(requests);
+}
+
+// -------------------------------------------------------------------------
+// DETECT — return an array of category keys that match a product list.
+// Checks product name + description against each category's keyword list.
+// -------------------------------------------------------------------------
+function detectCategories(products) {
+    const found = new Set();
+
+    for (const product of products) {
+        const text = (
+            (product.nombre      || "") + " " +
+            (product.descripcion || "")
+        ).toLowerCase();
+
+        for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+            if (keywords.some(kw => text.includes(kw))) {
+                found.add(cat);
+            }
+        }
+    }
+
+    return [...found];
+}
+
+// -------------------------------------------------------------------------
+// UPDATE BADGES — show how many stores match each sidebar category button
+// -------------------------------------------------------------------------
+function updateCategoryBadges() {
+    document.querySelectorAll(".categoria-btn[data-categoria]").forEach(btn => {
+        const cat = btn.dataset.categoria;
+
+        const count = cat === "todas"
+            ? allStores.length
+            : allStores.filter(s => s._categorias?.includes(cat)).length;
+
+        // Remove old badge if present
+        btn.querySelector(".cat-count")?.remove();
+
+        const badge       = document.createElement("span");
+        badge.className   = "cat-count";
+        badge.textContent = count;
+        btn.appendChild(badge);
+
+        // Visually dim categories with no matching stores
+        if (count === 0 && cat !== "todas") btn.classList.add("sin-tiendas");
+    });
+}
+
+// -------------------------------------------------------------------------
+// FILTER — called when the user clicks a category button
+// Updates the active state, title, subtitle and re-renders the grid.
+// -------------------------------------------------------------------------
+function filtrarPorCategoria(category) {
+    activeCategory = category;
+
+    // Update active button state
+    document.querySelectorAll(".categoria-btn").forEach(btn => {
+        btn.classList.toggle("activo", btn.dataset.categoria === category);
+    });
+
+    // Update page title and subtitle based on the selected category
+    const titles = {
+        "todas":         ["Tiendas cercanas",   "Explora tiendas disponibles cerca de tu ubicación."],
+        "animales":      ["Tiendas de animales","Tiendas con productos para tus mascotas."],
+        "comida rapida": ["Comida rápida",       "Tiendas con productos de comida rápida."],
+        "jardineria":    ["Jardinería",          "Tiendas con productos para tu jardín."],
+        "panaderia":     ["Panaderías",          "Tiendas con productos de panadería y bollería."],
+        "ropa":          ["Ropa",                "Tiendas con artículos de moda y textil."],
+        "verduleria":    ["Verdulerías",         "Tiendas con frutas, verduras y productos frescos."]
+    };
+
+    const [title, subtitle] = titles[category] || titles["todas"];
+    document.getElementById("tituloPrincipal").textContent    = title;
+    document.getElementById("subtituloPrincipal").textContent = subtitle;
+
+    // Filter the store list
+    const filtered = category === "todas"
+        ? allStores
+        : allStores.filter(s => s._categorias?.includes(category));
+
+    renderStores(filtered);
+
+    // Mobile pill — shows active filter with a clear button
+    const pill = document.getElementById("filtroActivoPill");
+    if (category !== "todas") {
+        document.getElementById("filtroActivoTexto").textContent =
+            category.charAt(0).toUpperCase() + category.slice(1);
+        pill.style.display = "flex";
+    } else {
+        pill.style.display = "none";
+    }
+}
+
+/** Reset the category filter and show all stores. */
+function limpiarFiltro() {
+    filtrarPorCategoria("todas");
+}
+
+// -------------------------------------------------------------------------
+// RENDER — inject store cards into the grid container
+// -------------------------------------------------------------------------
+function renderStores(stores) {
+    const grid    = document.getElementById("tiendas");
+    const emptyEl = document.getElementById("sinResultados");
+    const counter = document.getElementById("contadorTiendas");
+
+    // Show/hide results counter (only when a filter is active)
+    if (activeCategory !== "todas") {
+        document.getElementById("numTiendas").textContent = stores.length;
+        counter.style.display = "block";
+    } else {
+        counter.style.display = "none";
+    }
+
+    // Empty state
+    if (!stores.length) {
+        grid.innerHTML       = "";
+        emptyEl.style.display = "block";
+        return;
+    }
+    emptyEl.style.display = "none";
+
+    // Build card HTML for each store
+    grid.innerHTML = stores.map(store => {
+
+        // Extract first image from the JSON array stored in `imagenes`
+        let image = "tienda_default.jpg";
+        try {
+            const imgs = JSON.parse(store.imagenes || "[]");
+            if (Array.isArray(imgs) && imgs.length > 0) image = imgs[0];
+        } catch (_) {}
+
+        // Category badge pills displayed on the card overlay
+        const catIcons = {
+            "animales": "🐾", "comida rapida": "🍔", "jardineria": "🌿",
+            "panaderia": "🥖", "ropa": "👕", "verduleria": "🥦"
+        };
+
+        const catBadgesHtml = (store._categorias || [])
+            .map(c => `<span class="tienda-cat-badge">${catIcons[c] || ''} ${c}</span>`)
+            .join("");
+
+        return `
+            <a href="/tienda/${store.id_tienda}" class="tienda-card"
+               style="background-image: url('/static/img/${image}')">
+                <div class="overlay">
+                    <h3>${store.nombre_tienda}</h3>
+                    <p>${store.direccion_tienda}</p>
+
+                </div>
+            </a>
+        `;
+    }).join("");
+}
+
+// -------------------------------------------------------------------------
+// CITY SEARCH — filters stores by ciudad when the user types in #ubicacion
+// -------------------------------------------------------------------------
+const inputUbicacion = document.getElementById("ubicacion");
+
+if (inputUbicacion) {
+    let searchTimeout = null;
+
+    inputUbicacion.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = inputUbicacion.value.trim().toLowerCase();
+            filtrarPorCiudad(query);
+        }, 300);
+    });
+
+    inputUbicacion.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            inputUbicacion.value = "";
+            filtrarPorCiudad("");
+        }
+    });
+}
+
+function filtrarPorCiudad(query) {
+    if (!query) {
+        renderStores(activeCategory === "todas"
+            ? allStores
+            : allStores.filter(s => s._categorias?.includes(activeCategory)));
+        document.getElementById("tituloPrincipal").textContent    = "Tiendas cercanas";
+        document.getElementById("subtituloPrincipal").textContent = "Explora tiendas disponibles cerca de tu ubicación.";
+        document.getElementById("contadorTiendas").style.display  = "none";
+        return;
+    }
+
+    const filtered = allStores.filter(s =>
+        (s.ciudad || "").toLowerCase().includes(query) ||
+        (s.direccion_tienda || "").toLowerCase().includes(query)
+    );
+
+    document.getElementById("tituloPrincipal").textContent    = `Tiendas en "${query}"`;
+    document.getElementById("subtituloPrincipal").textContent = `${filtered.length} tienda${filtered.length !== 1 ? "s" : ""} encontrada${filtered.length !== 1 ? "s" : ""}`;
+    document.getElementById("numTiendas").textContent         = filtered.length;
+    document.getElementById("contadorTiendas").style.display  = "block";
+
+    renderStores(filtered);
+}
+
+// -------------------------------------------------------------------------
+// ATTACH CLICK HANDLERS to category sidebar buttons
+// -------------------------------------------------------------------------
+document.querySelectorAll(".categoria-btn").forEach(btn => {
+    btn.addEventListener("click", () => filtrarPorCategoria(btn.dataset.categoria));
+});
+
+// -------------------------------------------------------------------------
+// BOOT
+// -------------------------------------------------------------------------
+cargarTiendas();
+
+</script>
 
 {% endblock %}
